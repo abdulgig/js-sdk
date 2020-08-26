@@ -76,6 +76,14 @@ class Peertube(GedisChatBot):
 
     def container_node_id(self):
         self.selected_node = deployer.schedule_container(self.pool_id, **self.query)
+        self.network_view = self.network_view.copy()
+        result = deployer.add_network_node(self.network_view.name, self.selected_node, self.pool_id, self.network_view)
+        if result:
+            for wid in result["ids"]:
+                success = deployer.wait_workload(wid, self)
+                if not success:
+                    raise StopChatFlow(f"Failed to add node {self.selected_node.node_id} to network {wid}")
+            self.network_view = self.network_view.copy()
         self.ip_address = self.network_view.get_free_ip(self.selected_node)
 
     def select_domain(self):
